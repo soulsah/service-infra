@@ -1,5 +1,92 @@
-# main.tf
+# VPC Configuration
+resource "aws_vpc" "ecs_vpc" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name        = "ecs-vpc"
+    Environment = "Dev"
+  }
+}
 
+# Subnets for ECS
+resource "aws_subnet" "ecs_subnet_1" {
+  vpc_id            = aws_vpc.ecs_vpc.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-east-1a"
+  map_public_ip_on_launch = true
+  tags = {
+    Name        = "ecs-subnet-1"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_subnet" "ecs_subnet_2" {
+  vpc_id            = aws_vpc.ecs_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-east-1b"
+  map_public_ip_on_launch = true
+  tags = {
+    Name        = "ecs-subnet-2"
+    Environment = "Dev"
+  }
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "ecs_igw" {
+  vpc_id = aws_vpc.ecs_vpc.id
+  tags = {
+    Name        = "ecs-igw"
+    Environment = "Dev"
+  }
+}
+
+# Route Table
+resource "aws_route_table" "ecs_route_table" {
+  vpc_id = aws_vpc.ecs_vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.ecs_igw.id
+  }
+  tags = {
+    Name        = "ecs-route-table"
+    Environment = "Dev"
+  }
+}
+
+# Route Table Associations
+resource "aws_route_table_association" "ecs_rta_1" {
+  subnet_id      = aws_subnet.ecs_subnet_1.id
+  route_table_id = aws_route_table.ecs_route_table.id
+}
+
+resource "aws_route_table_association" "ecs_rta_2" {
+  subnet_id      = aws_subnet.ecs_subnet_2.id
+  route_table_id = aws_route_table.ecs_route_table.id
+}
+
+# Security Group for ECS
+resource "aws_security_group" "ecs_security_group" {
+  vpc_id = aws_vpc.ecs_vpc.id
+  name   = "ecs-security-group"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "ecs-security-group"
+    Environment = "Dev"
+  }
+}
 
 # DynamoDB Tables Configuration
 
@@ -219,4 +306,73 @@ resource "aws_api_gateway_deployment" "api_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
   stage_name  = "dev"
+}
+
+# ECR Repository for Service Usuario
+resource "aws_ecr_repository" "service_usuario" {
+  name = "service-usuario"
+  
+  image_tag_mutability = "MUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name        = "Service Usuario ECR"
+    Environment = "Dev"
+  }
+}
+
+# ECS Cluster
+resource "aws_ecs_cluster" "service_usuario_cluster" {
+  name = "service-usuario-cluster"
+}
+
+# ECS Task Definition
+resource "aws_ecs_task_definition" "service_usuario_task" {
+  family                   = "service-usuario-task"
+  execution_role_arn       = data.aws_iam_role.lambda_role.arn
+  container_definitions    = jsonencode([
+    {
+      name             = "service-usuario-container"
+      image            = "${aws_ecr_repository.service_usuario.repository_url}:latest"
+      memory           = 512
+      cpu              = 256
+      essential        = true
+      portMappings     = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+      environment = [
+        {
+          name  = "JWT_SECRET"
+          value = var.jwt_secret
+        }
+      ]
+    }
+  ])
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  memory                   = "1024"
+  cpu                      = "512"
+}
+
+# ECS Service
+resource "aws_ecs_service" "service_usuario" {
+  name            = "service-usuario"
+  cluster         = aws_ecs_cluster.service_usuario_cluster.id
+  task_definition = aws_ecs_task_definition.service_usuario_task.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = [aws_subnet.ecs_subnet_1.id, aws_subnet.ecs_subnet_2.id]
+    security_groups = [aws_security_group.ecs_security_group.id]
+  }
+
+  tags = {
+    Name        = "Service Usuario ECS"
+    Environment = "Dev"
+  }
 }

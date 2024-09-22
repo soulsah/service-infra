@@ -5,3 +5,8 @@ variable "jwt_secret" {
   type        = string
   default     = "postech70"
 }
+variable "ecr_image" {
+  description = "Nome da imagem ECR para o Service Usuario"
+  type        = string
+  default     = "service-usuario:latest"
+}
