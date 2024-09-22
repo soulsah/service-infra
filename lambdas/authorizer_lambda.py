@@ -7,8 +7,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'postech70')
 JWT_ALGORITHM = 'HS256'
 
 def lambda_handler(event, context):
+    # O token de autorização é recebido em 'authorizationToken'
     token = event.get('authorizationToken', '')
-    
+
     if not token:
         raise Exception('Unauthorized')
 

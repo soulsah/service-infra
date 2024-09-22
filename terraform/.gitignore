@@ -1,0 +1,26 @@
+# Ignore arquivos de estado do Terraform
+*.tfstate
+*.tfstate.backup
+
+# Ignore diretório de configuração e cache do Terraform
+.terraform/
+.terraform.lock.hcl
+
+# Ignore arquivos de variáveis sensíveis
+*.tfvars
+*.auto.tfvars
+
+# Ignore logs e saídas
+crash.log
+*.log
+
+# Ignore arquivos de plano gerados
+*.tfplan
+
+# Ignore configurações locais
+.DS_Store
+*.local
+
+# Ignore arquivos de lock de editores
+*.swp
+*.swo
