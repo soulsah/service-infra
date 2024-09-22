@@ -4,7 +4,7 @@
 # may not use this file except in compliance with the License. A copy of
 # the License is located at
 #
-# https://aws.amazon.com/apache2.0/
+# http://aws.amazon.com/apache2.0/
 #
 # or in the "license" file accompanying this file. This file is
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
@@ -20,5 +20,8 @@ class Boto3ClientDocumenter(ClientDocumenter):
         section.write('import boto3')
         section.style.new_line()
         section.style.new_line()
-        section.write(f'client = boto3.client(\'{self._service_name}\')')
+        section.write(
+            'client = boto3.client(\'{service}\')'.format(
+                service=self._service_name)
+        )
         section.style.end_codeblock()

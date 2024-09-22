@@ -1,7 +1,6 @@
 from .api_jwk import PyJWK, PyJWKSet
 from .api_jws import (
     PyJWS,
-    get_algorithm_by_name,
     get_unverified_header,
     register_algorithm,
     unregister_algorithm,
@@ -19,7 +18,6 @@ from .exceptions import (
     InvalidSignatureError,
     InvalidTokenError,
     MissingRequiredClaimError,
-    PyJWKClientConnectionError,
     PyJWKClientError,
     PyJWKError,
     PyJWKSetError,
@@ -27,7 +25,7 @@ from .exceptions import (
 )
 from .jwks_client import PyJWKClient
 
-__version__ = "2.9.0"
+__version__ = "2.4.0"
 
 __title__ = "PyJWT"
 __description__ = "JSON Web Token implementation in Python"
@@ -53,7 +51,6 @@ __all__ = [
     "get_unverified_header",
     "register_algorithm",
     "unregister_algorithm",
-    "get_algorithm_by_name",
     # Exceptions
     "DecodeError",
     "ExpiredSignatureError",
@@ -66,7 +63,6 @@ __all__ = [
     "InvalidSignatureError",
     "InvalidTokenError",
     "MissingRequiredClaimError",
-    "PyJWKClientConnectionError",
     "PyJWKClientError",
     "PyJWKError",
     "PyJWKSetError",

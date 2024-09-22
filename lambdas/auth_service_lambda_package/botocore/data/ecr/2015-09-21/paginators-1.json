@@ -29,10 +29,7 @@
         "imageScanFindings"
       ],
       "output_token": "nextToken",
-      "result_key": [
-        "imageScanFindings.findings",
-        "imageScanFindings.enhancedFindings"
-      ]
+      "result_key": "imageScanFindings.findings"
     },
     "GetLifecyclePolicyPreview": {
       "input_token": "nextToken",
@@ -46,21 +43,6 @@
       ],
       "output_token": "nextToken",
       "result_key": "previewResults"
-    },
-    "DescribePullThroughCacheRules": {
-      "input_token": "nextToken",
-      "limit_key": "maxResults",
-      "output_token": "nextToken",
-      "result_key": "pullThroughCacheRules"
-    },
-    "DescribeRepositoryCreationTemplates": {
-      "input_token": "nextToken",
-      "limit_key": "maxResults",
-      "non_aggregate_keys": [
-        "registryId"
-      ],
-      "output_token": "nextToken",
-      "result_key": "repositoryCreationTemplates"
     }
   }
 }

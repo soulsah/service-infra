@@ -14,11 +14,10 @@
 import logging
 
 logger = logging.getLogger('bcdocs')
-# Terminal punctuation where a space is not needed before.
-PUNCTUATION_CHARACTERS = ('.', ',', '?', '!', ':', ';')
 
 
-class BaseStyle:
+class BaseStyle(object):
+
     def __init__(self, doc, indent_width=2):
         self.doc = doc
         self.indent_width = indent_width
@@ -34,7 +33,7 @@ class BaseStyle:
         self._indent = value
 
     def new_paragraph(self):
-        return f'\n{self.spaces()}'
+        return '\n%s' % self.spaces()
 
     def indent(self):
         self._indent += 1
@@ -64,18 +63,9 @@ class BaseStyle:
     def italics(self, s):
         return s
 
-    def add_trailing_space_to_previous_write(self):
-        # Adds a trailing space if none exists. This is mainly used for
-        # ensuring inline code and links are separated from surrounding text.
-        last_write = self.doc.pop_write()
-        if last_write is None:
-            last_write = ''
-        if last_write != '' and last_write[-1] != ' ':
-            last_write += ' '
-        self.doc.push_write(last_write)
-
 
 class ReSTStyle(BaseStyle):
+
     def __init__(self, doc, indent_width=2):
         BaseStyle.__init__(self, doc, indent_width)
         self.do_p = True
@@ -83,33 +73,32 @@ class ReSTStyle(BaseStyle):
         self.list_depth = 0
 
     def new_paragraph(self):
-        self.doc.write(f'\n\n{self.spaces()}')
+        self.doc.write('\n\n%s' % self.spaces())
 
     def new_line(self):
-        self.doc.write(f'\n{self.spaces()}')
+        self.doc.write('\n%s' % self.spaces())
 
     def _start_inline(self, markup):
-        # Insert space between any directly adjacent bold and italic inlines to
-        # avoid situations like ``**abc***def*``.
-        try:
-            last_write = self.doc.peek_write()
-        except IndexError:
-            pass
-        else:
-            if last_write in ('*', '**') and markup in ('*', '**'):
-                self.doc.write(' ')
         self.doc.write(markup)
 
     def _end_inline(self, markup):
-        # Remove empty and self-closing tags like ``<b></b>`` and ``<b/>``.
-        # If we simply translate that directly then we end up with something
-        # like ****, which rst will assume is a heading instead of an empty
-        # bold.
-        last_write = self.doc.pop_write()
+        # Sometimes the HTML markup has whitespace between the end
+        # of the text inside the inline markup and the closing element
+        # (e.g. <b>foobar </b>).  This trailing space will cause
+        # problems in the ReST inline markup so we remove it here
+        # by popping the last item written off the stack, striping
+        # the whitespace and then pushing it back on the stack.
+        last_write = self.doc.pop_write().rstrip(' ')
+
+        # Sometimes, for whatever reason, a tag like <b/> is present. This
+        # is problematic because if we simply translate that directly then
+        # we end up with something like ****, which rst will assume is a
+        # heading instead of an empty bold.
         if last_write == markup:
             return
+
         self.doc.push_write(last_write)
-        self.doc.write(markup)
+        self.doc.write(markup + ' ')
 
     def start_bold(self, attrs=None):
         self._start_inline('**')
@@ -134,12 +123,12 @@ class ReSTStyle(BaseStyle):
     def ref(self, title, link=None):
         if link is None:
             link = title
-        self.doc.write(f':doc:`{title} <{link}>`')
+        self.doc.write(':doc:`%s <%s>`' % (title, link))
 
     def _heading(self, s, border_char):
         border = border_char * len(s)
         self.new_paragraph()
-        self.doc.write(f'{border}\n{s}\n{border}')
+        self.doc.write('%s\n%s\n%s' % (border, s, border))
         self.new_paragraph()
 
     def h1(self, s):
@@ -165,15 +154,14 @@ class ReSTStyle(BaseStyle):
 
     def start_p(self, attrs=None):
         if self.do_p:
-            self.doc.write(f'\n\n{self.spaces()}')
+            self.doc.write('\n\n%s' % self.spaces())
 
     def end_p(self):
         if self.do_p:
-            self.doc.write(f'\n\n{self.spaces()}')
+            self.doc.write('\n\n%s' % self.spaces())
 
     def start_code(self, attrs=None):
         self.doc.do_translation = True
-        self.add_trailing_space_to_previous_write()
         self._start_inline('``')
 
     def end_code(self):
@@ -217,15 +205,10 @@ class ReSTStyle(BaseStyle):
         self.new_paragraph()
 
     def start_a(self, attrs=None):
-        # Write an empty space to guard against zero whitespace
-        # before an "a" tag. Example: hi<a>Example</a>
-        self.add_trailing_space_to_previous_write()
         if attrs:
             for attr_key, attr_value in attrs:
                 if attr_key == 'href':
-                    # Removes unnecessary whitespace around the href link.
-                    # Example: <a href=" http://example.com ">Example</a>
-                    self.a_href = attr_value.strip()
+                    self.a_href = attr_value
                     self.doc.write('`')
         else:
             # There are some model documentation that
@@ -236,51 +219,39 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = True
 
     def link_target_definition(self, refname, link):
-        self.doc.writeln(f'.. _{refname}: {link}')
+        self.doc.writeln('.. _%s: %s' % (refname, link))
 
     def sphinx_reference_label(self, label, text=None):
         if text is None:
             text = label
         if self.doc.target == 'html':
-            self.doc.write(f':ref:`{text} <{label}>`')
+            self.doc.write(':ref:`%s <%s>`' % (text, label))
         else:
             self.doc.write(text)
 
-    def _clean_link_text(self):
-        doc = self.doc
-        # Pop till we reach the link start character to retrieve link text.
-        last_write = doc.pop_write()
-        while not last_write.startswith('`'):
-            last_write = doc.pop_write() + last_write
-        if last_write != '':
-            # Remove whitespace from the start of link text.
-            if last_write.startswith('` '):
-                last_write = f'`{last_write[1:].lstrip(" ")}'
-            doc.push_write(last_write)
-
-    def end_a(self, next_child=None):
+    def end_a(self):
         self.doc.do_translation = False
         if self.a_href:
-            self._clean_link_text()
             last_write = self.doc.pop_write()
             last_write = last_write.rstrip(' ')
             if last_write and last_write != '`':
                 if ':' in last_write:
                     last_write = last_write.replace(':', r'\:')
                 self.doc.push_write(last_write)
-                self.doc.push_write(f' <{self.a_href}>`__')
+                self.doc.push_write(' <%s>`__' % self.a_href)
             elif last_write == '`':
                 # Look at start_a().  It will do a self.doc.write('`')
                 # which is the start of the link title.  If that is the
                 # case then there was no link text.  We should just
                 # use an inline link.  The syntax of this is
                 # `<http://url>`_
-                self.doc.push_write(f'`<{self.a_href}>`__')
+                self.doc.push_write('`<%s>`__' % self.a_href)
             else:
                 self.doc.push_write(self.a_href)
                 self.doc.hrefs[self.a_href] = self.a_href
                 self.doc.write('`__')
             self.a_href = None
+        self.doc.write(' ')
 
     def start_i(self, attrs=None):
         self.doc.do_translation = True
@@ -375,9 +346,9 @@ class ReSTStyle(BaseStyle):
             self.li(item)
         else:
             if file_name:
-                self.doc.writeln(f'  {file_name}')
+                self.doc.writeln('  %s' % file_name)
             else:
-                self.doc.writeln(f'  {item}')
+                self.doc.writeln('  %s' % item)
 
     def hidden_toctree(self):
         if self.doc.target == 'html':
@@ -394,11 +365,11 @@ class ReSTStyle(BaseStyle):
         if title is not None:
             self.doc.writeln(title)
         if depth is not None:
-            self.doc.writeln(f'   :depth: {depth}')
+            self.doc.writeln('   :depth: %s' % depth)
 
     def start_sphinx_py_class(self, class_name):
         self.new_paragraph()
-        self.doc.write(f'.. py:class:: {class_name}')
+        self.doc.write('.. py:class:: %s' % class_name)
         self.indent()
         self.new_paragraph()
 
@@ -408,9 +379,9 @@ class ReSTStyle(BaseStyle):
 
     def start_sphinx_py_method(self, method_name, parameters=None):
         self.new_paragraph()
-        content = f'.. py:method:: {method_name}'
+        content = '.. py:method:: %s' % method_name
         if parameters is not None:
-            content += f'({parameters})'
+            content += '(%s)' % parameters
         self.doc.write(content)
         self.indent()
         self.new_paragraph()
@@ -421,7 +392,7 @@ class ReSTStyle(BaseStyle):
 
     def start_sphinx_py_attr(self, attr_name):
         self.new_paragraph()
-        self.doc.write(f'.. py:attribute:: {attr_name}')
+        self.doc.write('.. py:attribute:: %s' % attr_name)
         self.indent()
         self.new_paragraph()
 
@@ -436,12 +407,12 @@ class ReSTStyle(BaseStyle):
 
     def external_link(self, title, link):
         if self.doc.target == 'html':
-            self.doc.write(f'`{title} <{link}>`_')
+            self.doc.write('`%s <%s>`_' % (title, link))
         else:
             self.doc.write(title)
 
     def internal_link(self, title, page):
         if self.doc.target == 'html':
-            self.doc.write(f':doc:`{title} <{page}>`')
+            self.doc.write(':doc:`%s <%s>`' % (title, page))
         else:
             self.doc.write(title)

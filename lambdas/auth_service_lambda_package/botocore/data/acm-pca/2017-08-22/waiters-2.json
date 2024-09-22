@@ -16,18 +16,13 @@
                     "state": "retry",
                     "matcher": "error",
                     "expected": "RequestInProgressException"
-                },
-                {
-                    "state": "failure",
-                    "matcher": "error",
-                    "expected": "AccessDeniedException"
                 }
             ]
         },
         "CertificateIssued": {
             "description": "Wait until a certificate is issued",
             "operation": "GetCertificate",
-            "delay": 1,
+            "delay": 3,
             "maxAttempts": 60,
             "acceptors": [
                 {
@@ -39,11 +34,6 @@
                     "state": "retry",
                     "matcher": "error",
                     "expected": "RequestInProgressException"
-                },
-                {
-                    "state": "failure",
-                    "matcher": "error",
-                    "expected": "AccessDeniedException"
                 }
             ]
         },
@@ -64,11 +54,6 @@
                     "matcher": "path",
                     "argument": "AuditReportStatus",
                     "expected": "FAILED"
-                },
-                {
-                    "state": "failure",
-                    "matcher": "error",
-                    "expected": "AccessDeniedException"
                 }
             ]
         }
