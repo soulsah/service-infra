@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "ecs_target_group" {
 # Criar Listener para o Load Balancer
 resource "aws_lb_listener" "ecs_lb_listener" {
   load_balancer_arn = aws_lb.ecs_load_balancer.arn
-  port              = 8081
+  port              = 80 # Alterar para porta 80 para compatibilidade com API Gateway
   protocol          = "HTTP"
 
   default_action {

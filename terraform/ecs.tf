@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "service_usuario_task" {
   container_definitions    = jsonencode([
     {
       name             = "service-usuario-container"
-      image            = "496778154277.dkr.ecr.us-east-1.amazonaws.com/service-usuario:latest"
+      image            = "496778154277.dkr.ecr.us-east-1.amazonaws.com/service-usuario:latest" # Corrigir URI da imagem
       memory           = 512
       cpu              = 256
       essential        = true
@@ -26,6 +26,14 @@ resource "aws_ecs_task_definition" "service_usuario_task" {
           value = var.jwt_secret
         }
       ]
+      logConfiguration = {  # Adicionar configuração de log para facilitar o troubleshooting
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"        = "/ecs/service-usuario"
+          "awslogs-region"       = "us-east-1"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
     }
   ])
   requires_compatibilities = ["FARGATE"]

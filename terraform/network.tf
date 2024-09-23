@@ -68,7 +68,7 @@ resource "aws_security_group" "ecs_security_group" {
   vpc_id = aws_vpc.ecs_vpc.id
   name   = "ecs-security-group"
 
-  # Permitir tráfego HTTP na porta 80
+  # Permitir tráfego HTTP na porta 80 (para o Load Balancer se necessário)
   ingress {
     from_port   = 80
     to_port     = 80
@@ -76,7 +76,7 @@ resource "aws_security_group" "ecs_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Permitir tráfego na porta 8081 (necessário para o ECS Service)
+  # Permitir tráfego HTTP na porta 8081 (necessário para o ECS Service)
   ingress {
     from_port   = 8081
     to_port     = 8081
