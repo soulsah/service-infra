@@ -15,7 +15,7 @@ resource "aws_lb" "ecs_load_balancer" {
 # Criar Target Group
 resource "aws_lb_target_group" "ecs_target_group" {
   name        = "ecs-target-group"
-  port        = 80
+  port        = 8081
   protocol    = "HTTP"
   vpc_id      = aws_vpc.ecs_vpc.id
   target_type = "ip"
@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "ecs_target_group" {
 # Criar Listener para o Load Balancer
 resource "aws_lb_listener" "ecs_lb_listener" {
   load_balancer_arn = aws_lb.ecs_load_balancer.arn
-  port              = 80
+  port              = 8081
   protocol          = "HTTP"
 
   default_action {
@@ -46,5 +46,3 @@ resource "aws_lb_listener" "ecs_lb_listener" {
     target_group_arn = aws_lb_target_group.ecs_target_group.arn
   }
 }
-
-

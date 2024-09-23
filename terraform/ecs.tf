@@ -1,5 +1,3 @@
-# ecs.tf
-
 # ECS Cluster
 resource "aws_ecs_cluster" "service_usuario_cluster" {
   name = "service-usuario-cluster"
@@ -18,8 +16,8 @@ resource "aws_ecs_task_definition" "service_usuario_task" {
       essential        = true
       portMappings     = [
         {
-          containerPort = 80
-          hostPort      = 80
+          containerPort = 8081
+          hostPort      = 8081
         }
       ]
       environment = [
@@ -50,11 +48,13 @@ resource "aws_ecs_service" "service_usuario" {
   load_balancer {
     target_group_arn = aws_lb_target_group.ecs_target_group.arn
     container_name   = "service-usuario-container"
-    container_port   = 80
+    container_port   = 8081
   }
 
   depends_on = [
-    aws_ecs_cluster.service_usuario_cluster  # Adiciona dependência explícita do cluster
+    aws_ecs_cluster.service_usuario_cluster,  # Adiciona dependência explícita do cluster
+    aws_lb_target_group.ecs_target_group,     # Garante que o Target Group exista antes do ECS Service
+    aws_lb_listener.ecs_lb_listener           # Garante que o Listener esteja configurado
   ]
 
   tags = {
