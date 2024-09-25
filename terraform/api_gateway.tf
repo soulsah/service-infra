@@ -3,13 +3,6 @@ resource "aws_api_gateway_rest_api" "api_gateway" {
   name = "MyAPIGateway"
 }
 
-# Definição única do VPC Link para o API Gateway
-resource "aws_api_gateway_vpc_link" "vpc_link" {
-  name = "MyVpcLink"
-  target_arns = [
-    aws_lb.ecs_load_balancer.arn
-  ]
-}
 
 # /auth Resource
 resource "aws_api_gateway_resource" "auth" {
@@ -111,8 +104,6 @@ resource "aws_api_gateway_integration" "get_usuario_integration" {
   integration_http_method = "GET"
   type                    = "HTTP"
   uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario" # Porta ajustada
-  connection_type         = "VPC_LINK"
-  connection_id           = aws_api_gateway_vpc_link.vpc_link.id
 }
 
 # GET /cadastrar/usuario/documento/{documento}
