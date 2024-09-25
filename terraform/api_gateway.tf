@@ -3,6 +3,14 @@ resource "aws_api_gateway_rest_api" "api_gateway" {
   name = "MyAPIGateway"
 }
 
+# Definição única do VPC Link para o API Gateway
+resource "aws_api_gateway_vpc_link" "vpc_link" {
+  name = "MyVpcLink"
+  target_arns = [
+    aws_lb.ecs_load_balancer.arn
+  ]
+}
+
 # /auth Resource
 resource "aws_api_gateway_resource" "auth" {
   rest_api_id = aws_api_gateway_rest_api.api_gateway.id
@@ -84,7 +92,7 @@ resource "aws_api_gateway_integration" "post_usuario_integration" {
   http_method             = aws_api_gateway_method.post_usuario.http_method
   integration_http_method = "POST"
   type                    = "HTTP"
-  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}/cadastrar/usuario"
+  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario" # Porta ajustada
 }
 
 # GET /cadastrar/usuario
@@ -102,7 +110,9 @@ resource "aws_api_gateway_integration" "get_usuario_integration" {
   http_method             = aws_api_gateway_method.get_usuario.http_method
   integration_http_method = "GET"
   type                    = "HTTP"
-  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}/cadastrar/usuario"
+  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario" # Porta ajustada
+  connection_type         = "VPC_LINK"
+  connection_id           = aws_api_gateway_vpc_link.vpc_link.id
 }
 
 # GET /cadastrar/usuario/documento/{documento}
@@ -126,7 +136,7 @@ resource "aws_api_gateway_integration" "get_usuario_documento_integration" {
   http_method             = aws_api_gateway_method.get_usuario_documento.http_method
   integration_http_method = "GET"
   type                    = "HTTP"
-  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}/cadastrar/usuario/documento/{documento}"
+  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario/documento/{documento}" # Porta ajustada
 }
 
 # GET /cadastrar/usuario/crm/{crm}
@@ -150,7 +160,7 @@ resource "aws_api_gateway_integration" "get_usuario_crm_integration" {
   http_method             = aws_api_gateway_method.get_usuario_crm.http_method
   integration_http_method = "GET"
   type                    = "HTTP"
-  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}/cadastrar/usuario/crm/{crm}"
+  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario/crm/{crm}" # Porta ajustada
 }
 
 # PUT /cadastrar/usuario/{id}
@@ -168,7 +178,7 @@ resource "aws_api_gateway_integration" "put_usuario_integration" {
   http_method             = aws_api_gateway_method.put_usuario.http_method
   integration_http_method = "PUT"
   type                    = "HTTP"
-  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}/cadastrar/usuario/{id}"
+  uri                     = "http://${aws_lb.ecs_load_balancer.dns_name}:8081/cadastrar/usuario/{id}" # Porta ajustada
 }
 
 # /protected Resource

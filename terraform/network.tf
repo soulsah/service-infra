@@ -1,6 +1,8 @@
 # VPC Configuration
 resource "aws_vpc" "ecs_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
   tags = {
     Name        = "ecs-vpc"
     Environment = "Dev"
@@ -63,25 +65,17 @@ resource "aws_route_table_association" "ecs_rta_2" {
   route_table_id = aws_route_table.ecs_route_table.id
 }
 
-# Security Group for ECS
+# Security Group para o ECS Service
 resource "aws_security_group" "ecs_security_group" {
   vpc_id = aws_vpc.ecs_vpc.id
   name   = "ecs-security-group"
 
-  # Permitir tráfego HTTP na porta 80 (para o Load Balancer se necessário)
+  # Permitir tráfego na porta 8081 vindo do Security Group do Load Balancer
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Permitir tráfego HTTP na porta 8081 (necessário para o ECS Service)
-  ingress {
-    from_port   = 8081
-    to_port     = 8081
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 8081
+    to_port         = 8081
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lb_security_group.id] # Referência ao Security Group do Load Balancer
   }
 
   # Permitir todo tráfego de saída
@@ -94,6 +88,33 @@ resource "aws_security_group" "ecs_security_group" {
 
   tags = {
     Name        = "ecs-security-group"
+    Environment = "Dev"
+  }
+}
+
+# Security Group para o Load Balancer
+resource "aws_security_group" "lb_security_group" {
+  vpc_id = aws_vpc.ecs_vpc.id
+  name   = "lb-security-group"
+
+  # Permitir tráfego na porta 8081
+  ingress {
+    from_port   = 8081
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Permite tráfego de qualquer origem
+  }
+
+  # Permitir todo tráfego de saída
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "lb-security-group"
     Environment = "Dev"
   }
 }

@@ -12,8 +12,3 @@ variable "ecr_image" {
   default     = "service-usuario:latest"
 }
 
-variable "ecs_lb_dns" {
-  description = "DNS do Load Balancer do ECS"
-  type        = string
-  default     = "" # Esse valor será atribuído automaticamente pelo Terraform
-}

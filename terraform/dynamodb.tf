@@ -2,7 +2,7 @@
 
 # Tabela Cliente
 resource "aws_dynamodb_table" "cliente" {
-  name         = "Cliente"
+  name         = "cliente"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
 
@@ -16,7 +16,7 @@ resource "aws_dynamodb_table" "cliente" {
   }
 
   tags = {
-    Name        = "Cliente Table"
+    Name        = "cliente Table"
     Environment = "Dev"
   }
 }

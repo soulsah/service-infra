@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "ecs_target_group" {
   target_type = "ip"
 
   health_check {
-    path                = "/health"
+    path                = "/actuator/health"  # Ajuste para a rota de health do Spring Boot
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "ecs_target_group" {
 # Criar Listener para o Load Balancer
 resource "aws_lb_listener" "ecs_lb_listener" {
   load_balancer_arn = aws_lb.ecs_load_balancer.arn
-  port              = 80 # Alterar para porta 80 para compatibilidade com API Gateway
+  port              = 8081
   protocol          = "HTTP"
 
   default_action {

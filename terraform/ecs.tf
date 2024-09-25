@@ -6,11 +6,11 @@ resource "aws_ecs_cluster" "service_usuario_cluster" {
 # ECS Task Definition
 resource "aws_ecs_task_definition" "service_usuario_task" {
   family                   = "service-usuario-task"
-  execution_role_arn       = data.aws_iam_role.lambda_role.arn
+  execution_role_arn       = "arn:aws:iam::496778154277:role/LabRole" 
   container_definitions    = jsonencode([
     {
       name             = "service-usuario-container"
-      image            = "496778154277.dkr.ecr.us-east-1.amazonaws.com/service-usuario:latest" # Corrigir URI da imagem
+      image            = "${aws_ecr_repository.service_usuario.repository_url}:latest"
       memory           = 512
       cpu              = 256
       essential        = true
@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "service_usuario_task" {
           value = var.jwt_secret
         }
       ]
-      logConfiguration = {  # Adicionar configuração de log para facilitar o troubleshooting
+      logConfiguration = {
         logDriver = "awslogs"
         options = {
           "awslogs-group"        = "/ecs/service-usuario"
