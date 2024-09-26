@@ -3,7 +3,7 @@ resource "aws_lb" "ecs_load_balancer" {
   name               = "ecs-load-balancer"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.ecs_security_group.id]
+  security_groups    = [aws_security_group.ecs_sg.id]
   subnets            = [aws_subnet.ecs_subnet_1.id, aws_subnet.ecs_subnet_2.id]
 
   tags = {
@@ -13,7 +13,7 @@ resource "aws_lb" "ecs_load_balancer" {
 }
 
 # Criar Target Group
-resource "aws_lb_target_group" "ecs_target_group" {
+resource "aws_lb_target_group" "service_usuario_tg" {
   name        = "ecs-target-group"
   port        = 8081
   protocol    = "HTTP"
@@ -35,14 +35,28 @@ resource "aws_lb_target_group" "ecs_target_group" {
   }
 }
 
+# Criar Network Load Balancer (NLB) ao invés de Application Load Balancer (ALB)
+resource "aws_lb" "ecs_nlb" {
+  name               = "ecs-network-load-balancer"
+  internal           = false
+  load_balancer_type = "network"  # Tipo deve ser "network" para NLB
+  subnets            = [aws_subnet.ecs_subnet_1.id, aws_subnet.ecs_subnet_2.id]
+
+  tags = {
+    Name        = "ecs-network-load-balancer"
+    Environment = "Dev"
+  }
+}
+
+
 # Criar Listener para o Load Balancer
-resource "aws_lb_listener" "ecs_lb_listener" {
+resource "aws_lb_listener" "service_usuario_listener" {
   load_balancer_arn = aws_lb.ecs_load_balancer.arn
-  port              = 8081
+  port              = 80
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ecs_target_group.arn
+    target_group_arn = aws_lb_target_group.service_usuario_tg.arn
   }
 }

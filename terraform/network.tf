@@ -44,41 +44,41 @@ resource "aws_internet_gateway" "ecs_igw" {
 # Route Table
 resource "aws_route_table" "ecs_route_table" {
   vpc_id = aws_vpc.ecs_vpc.id
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.ecs_igw.id
   }
+
   tags = {
     Name        = "ecs-route-table"
     Environment = "Dev"
   }
 }
 
-# Route Table Associations
-resource "aws_route_table_association" "ecs_rta_1" {
+# Route Table Association
+resource "aws_route_table_association" "ecs_subnet_1_association" {
   subnet_id      = aws_subnet.ecs_subnet_1.id
   route_table_id = aws_route_table.ecs_route_table.id
 }
 
-resource "aws_route_table_association" "ecs_rta_2" {
+resource "aws_route_table_association" "ecs_subnet_2_association" {
   subnet_id      = aws_subnet.ecs_subnet_2.id
   route_table_id = aws_route_table.ecs_route_table.id
 }
 
-# Security Group para o ECS Service
-resource "aws_security_group" "ecs_security_group" {
-  vpc_id = aws_vpc.ecs_vpc.id
-  name   = "ecs-security-group"
+# Security Group for ECS and Load Balancer
+resource "aws_security_group" "ecs_sg" {
+  name_prefix = "ecs-sg"
+  vpc_id      = aws_vpc.ecs_vpc.id
 
-  # Permitir tráfego na porta 8081 vindo do Security Group do Load Balancer
   ingress {
-    from_port       = 8081
-    to_port         = 8081
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lb_security_group.id] # Referência ao Security Group do Load Balancer
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Permitir todo tráfego de saída
   egress {
     from_port   = 0
     to_port     = 0
@@ -88,33 +88,6 @@ resource "aws_security_group" "ecs_security_group" {
 
   tags = {
     Name        = "ecs-security-group"
-    Environment = "Dev"
-  }
-}
-
-# Security Group para o Load Balancer
-resource "aws_security_group" "lb_security_group" {
-  vpc_id = aws_vpc.ecs_vpc.id
-  name   = "lb-security-group"
-
-  # Permitir tráfego na porta 8081
-  ingress {
-    from_port   = 8081
-    to_port     = 8081
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Permite tráfego de qualquer origem
-  }
-
-  # Permitir todo tráfego de saída
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name        = "lb-security-group"
     Environment = "Dev"
   }
 }

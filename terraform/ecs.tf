@@ -38,8 +38,8 @@ resource "aws_ecs_task_definition" "service_usuario_task" {
   ])
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  memory                   = "1024"
-  cpu                      = "512"
+  cpu                      = "256"
+  memory                   = "512"
 }
 
 # ECS Service
@@ -47,26 +47,19 @@ resource "aws_ecs_service" "service_usuario" {
   name            = "service-usuario"
   cluster         = aws_ecs_cluster.service_usuario_cluster.id
   task_definition = aws_ecs_task_definition.service_usuario_task.arn
-  desired_count   = 1
+  desired_count   = 2
   launch_type     = "FARGATE"
+  
   network_configuration {
-    subnets         = [aws_subnet.ecs_subnet_1.id, aws_subnet.ecs_subnet_2.id]
-    security_groups = [aws_security_group.ecs_security_group.id]
+    subnets          = [aws_subnet.ecs_subnet_1.id, aws_subnet.ecs_subnet_2.id]
+    security_groups  = [aws_security_group.ecs_sg.id]
+    assign_public_ip = true
   }
+
   load_balancer {
-    target_group_arn = aws_lb_target_group.ecs_target_group.arn
+    target_group_arn = aws_lb_target_group.service_usuario_tg.arn
     container_name   = "service-usuario-container"
     container_port   = 8081
   }
-
-  depends_on = [
-    aws_ecs_cluster.service_usuario_cluster,  # Adiciona dependência explícita do cluster
-    aws_lb_target_group.ecs_target_group,     # Garante que o Target Group exista antes do ECS Service
-    aws_lb_listener.ecs_lb_listener           # Garante que o Listener esteja configurado
-  ]
-
-  tags = {
-    Name        = "Service Usuario ECS"
-    Environment = "Dev"
-  }
+  depends_on = [aws_lb.ecs_nlb]
 }
