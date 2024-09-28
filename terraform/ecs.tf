@@ -6,7 +6,7 @@ resource "aws_ecs_cluster" "service_usuario_cluster" {
 # ECS Task Definition
 resource "aws_ecs_task_definition" "service_usuario_task" {
   family                   = "service-usuario-task"
-  execution_role_arn       = "arn:aws:iam::496778154277:role/LabRole" 
+  execution_role_arn       = "arn:aws:iam::305812076178:role/LabRole"
   container_definitions    = jsonencode([
     {
       name             = "service-usuario-container"
