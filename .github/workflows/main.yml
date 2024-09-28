@@ -32,16 +32,20 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
+        working-directory: ./terraform
 
       - name: Terraform Validate
         id: validate
         run: terraform validate
+        working-directory: ./terraform
 
       - name: Terraform Plan
         id: plan
         run: terraform plan -out=plan.tfplan
+        working-directory: ./terraform
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: apply
         run: terraform apply -auto-approve plan.tfplan
+        working-directory: ./terraform
