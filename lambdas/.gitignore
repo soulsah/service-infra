@@ -1,0 +1,39 @@
+# Ignore arquivos e pastas do Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+
+# Ignore arquivos de ambiente virtual
+venv/
+.env
+.envrc
+.Python
+
+# Ignore logs
+*.log
+
+# Ignore zip files gerados pelo processo de build
+*.zip
+
+# Ignore arquivos de configuração de IDE
+.vscode/
+.idea/
+
+# Ignore dependências do pip instaladas localmente
+*.egg-info/
+dist/
+build/
+*.egg
+
+*.gz
+*.json
+
+# Ignore configurações locais
+.DS_Store
+*.local
+
+# Arquivos de pacotes específicos
+pip-wheel-metadata/
+site-packages/
